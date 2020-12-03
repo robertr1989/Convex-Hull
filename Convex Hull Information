@@ -1,0 +1,11 @@
+Methods needed to solve the Convex Hull problem:
+
+
+1. Being able to use stacks to keep track of co-ordinates 
+
+2. Read file from computer
+
+3. Write to a file to present the convex hull
+
+4. may or may not need a class for this assignment, depending on the work load.
+
