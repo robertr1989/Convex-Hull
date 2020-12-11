@@ -10,3 +10,239 @@ Methods needed to solve the Convex Hull problem:
 4. may or may not need a class for this assignment, depending on the work load.
 
 test
+
+
+#include <iostream>
+#include <stack>
+#include <stdlib.h>
+#include <fstream>
+#include <vector>
+#include <ctime>
+
+
+ /*
+
+
+CONVEX HULL
+
+ */
+
+
+
+struct Coordinates// creating a struct to keep track of x and y coordinates!
+{
+    int x;
+    
+    int y;
+};
+
+
+int readFile(Coordinates points[], std::ifstream& file){
+    std::ifstream pfile;
+    pfile.open(file); // <------ change file name here 
+    int i=0;
+    while(pfile){
+        pfile>>points[i].x>>points[i].y;
+        i++;
+    }
+    pfile.close();
+    return points;
+}
+
+Coordinates position0; // keeping track of the first position! this holds x and y value!
+
+Coordinates previousCoordinate(std::stack<Coordinates> &S)
+
+// this function will add the next coordinate to the top (previous)
+{
+    Coordinates p = S.top();
+    S.pop();
+    Coordinates res = S.top();
+    S.push(p);
+    return res;
+}
+
+//This will swap two coordinates to find the convex of graph
+int swapCoordinate(Coordinates &p1, Coordinates &p2)
+{
+    Coordinates temp = p1;
+    p1 = p2;
+    p2 = temp;
+
+    return 0;
+}
+
+int distanceCoordinate(Coordinates c, Coordinates n)
+
+//finding the distance between coordinates using ((x1-x2)^2 + (y1 - y2)^2) without using square root
+
+
+/*
+
+    c ---> current coordinate
+
+    n -----> next  coordinate
+
+*/
+
+{
+    return (c.x - n.x)*(c.x - n.x) +
+          (c.y - n.y)*(c.y - n.y);
+}
+
+
+int findingResults(Coordinates p, Coordinates c, Coordinates n)
+{
+
+    /*
+        This portion determines if coordinates move:
+
+        0 == no turn;
+        1 == left turn;
+        2 == right turn;
+                                                
+    */
+    int val = (c.y - p.y) * (n.x - c.x) -
+              (c.x - p.x) * (n.y - c.y);
+    if (val == 0){
+
+    return 0; 
+    }                                            
+
+    else if( val == 1){
+        return 1;
+    }
+
+    else{
+        return 2;
+    }
+}
+
+//starting to implement the quick sort algorithm for the code.
+
+int matchCoordinates(const void *vc, const void *vn)
+{
+   Coordinates *c = (Coordinates *)vc;
+   Coordinates *n = (Coordinates *)vn;
+
+   /*this will find calculations in which direction the graph moves by distance*/
+
+   int x = findingResults(position0, *c, *n);
+   if (x == 0){
+       if (distanceCoordinate(position0, *n) >= distanceCoordinate(position0, *c)){
+           return -1;
+       }
+       else{
+           return 1;
+       }
+   }
+    else if (x == 2){
+        return -1;
+    }
+
+    else{
+        return 1;
+    }
+}
+
+//this will print out the coordinates once it is finished through algorithm
+
+void convex_hull_algorithm(Coordinates points[], int n)
+{
+   
+   //finds the coordinate closest to the bottom of graph
+   int minimum_y = points[0].y, min = 0;
+   for (int i = 1; i < n; i++)
+   {
+     int y = points[i].y;
+     
+     if ((y < minimum_y) || (minimum_y == y &&
+         points[i].x < points[min].x))
+        minimum_y = points[i].y, min = i;
+   }
+    
+    //for the first position we will place the bottom most here
+   swapCoordinate(points[0], points[min]);
+
+   /*
+        During the next block of code we will sort all coordinates 
+        from the first coordinate and we will see if current coordinate
+        comes before the next coordinate once we determine if next
+        coordinate has a larger angle than current coordinate.
+
+        if we have more than one coordinates with same angle as previous
+        coordinate then we take away everything but the farthest
+        coordinate from the previous coordinate.
+
+        */
+
+   
+   position0 = points[0];
+   //using quick sort algorithm to sort coordinates
+   qsort(&points[1], n-1, sizeof(Coordinates), matchCoordinates);
+   
+   int num = 1; // number of points on convex hull, we will keep track of coordinates with num
+
+   for (int i=1; i<n; i++){
+
+       //while i and the next i position is the same angle as previous, we keep removing i.
+
+            while (i < n-1 && findingResults(position0, points[i], points[i+1]) == 0)
+
+            i++; 
+
+            points[num] = points[i];
+
+            num++;  
+   }
+   
+   if (num < 3) return; // we are making sure that coordinates are in 3s or else we won't run the program
+   
+   std::stack<Coordinates> S; // this is where we push 3 coordinates in stack at a time
+   S.push(points[0]);
+   S.push(points[1]);
+   S.push(points[2]);
+   
+   for (int i = 3; i < num; i++)//we take the remaining coordinates.
+   {
+      
+      /* keep going until coordinates can't turn left anymore
+      so that we don't check for unnecessary coordinates for convex hull*/
+
+
+      while (findingResults(previousCoordinate(S), S.top(), points[i]) != 2)
+         S.pop();
+         S.push(points[i]);
+   }
+   
+   while (!S.empty())// printing the stack
+   {
+       Coordinates p = S.top();
+       std::cout << "(" << p.x << ", " << p.y <<")" << std::endl;
+       S.pop();
+   }
+}
+
+int main(int argc, char *argv[])
+{
+
+
+    std::stoi(argv[1]);
+
+
+
+
+    Coordinates points[] = 
+    
+    {{0,1}, {0,2}, {1,4}, {2,5}, {4,0}, {3,3}, {2,0}, {3,4}, {5,1}, {1,1}, {4,2}};// 11 coordinates
+
+
+    int numOfPoints = sizeof(points)/sizeof(points[0]);// finding the amount of coordinates in array of coordinates!
+
+    std::cout << "Number of Points: " << numOfPoints << std::endl;// finding the total of coordinates
+
+    convex_hull_algorithm(points, numOfPoints);// inserting the coordinates in algorithm
+
+    return 0;
+
+}
